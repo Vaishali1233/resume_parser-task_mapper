@@ -1,0 +1,13 @@
+## 📜 Google Apps Scripts  
+This project includes **Google Apps Scripts** for automation tasks like **resume parsing, task mapping, and email notifications**.  
+
+### 📂 `google-app-scripts/` Folder Contents  
+| File | Description |  
+|---|---|  
+| `resume_parser.gs` | Extracts key details (Name, Email, Skills) from resumes and stores them in Google Sheets. The user can also upload files to extract data and add to their current sheet. |  
+| `task_mapper.gs` | Dynamically assigns tasks to employees based on their skills. |  
+
+To deploy these scripts in your own Google Apps Script project:  
+1. Open **Google Apps Script Editor** in Google Sheets.  
+2. Copy-paste the contents of each `.gs` file.  
+3. Save & deploy as needed.  

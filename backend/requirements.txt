@@ -1,0 +1,5 @@
+pip install pyngrok
+pip install pdfplumber
+pip install ngrok
+!pip install --upgrade google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+pip install Flask
