@@ -2,9 +2,8 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Candidate Data')
     .addItem('Run Resume Parser', 'callProcessResumes')
-    .addSubMenu(ui.createMenu('Upload Sheet')
-      .addItem('Upload CSV', 'promptUploadLink')
-      .addItem('Upload Google Sheet', 'promptUploadLink'))
+    .addItem('Upload Google Sheet', 'promptUploadLink')
+    .addItem('Custom Header Mapping', 'showHeaderMappingPopup')
     .addToUi();
 
   if(shouldRunAutomatically()){
@@ -60,43 +59,6 @@ function processUploadedSheet(sheetLink) {
   } catch (error) {
     SpreadsheetApp.getUi().alert("Error processing uploaded sheet: " + error.message);
   }
-}
-
-function assignCandidateID(sheet, row) {
-    var registrySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Candidate ID Registry");
-    if (!registrySheet) {
-        registrySheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Candidate ID Registry");
-        registrySheet.appendRow(["Candidate Name", "Candidate ID"]); 
-    }
-
-    var name = sheet.getRange(row, 2).getValue().toString().trim().toLowerCase(); 
-    if (!name) return;
-    var candidateData = sheet.getRange("A2:A" + sheet.getLastRow()).getValues().flat(); 
-    var registryData = registrySheet.getDataRange().getValues();
-    
-    var nameToIdMap = {};
-    var existingIds = candidateData.filter(id => !isNaN(id) && id !== "").map(id => parseInt(id, 10));
-
-    for (var i = 1; i < registryData.length; i++) { 
-        var regName = registryData[i][0].toString().trim().toLowerCase();
-        var regId = parseInt(registryData[i][1], 10);
-        if (regName) {
-            nameToIdMap[regName] = regId;
-            existingIds.push(regId);
-        }
-    }
-
-    var maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0; 
-
-    if (name in nameToIdMap) {
-        sheet.getRange(row, 1).setValue(nameToIdMap[name]);
-        Logger.log("Retained Candidate ID: " + nameToIdMap[name] + " for " + name);
-    } else {
-        var newId = maxId + 1;
-        sheet.getRange(row, 1).setValue(newId);
-        registrySheet.appendRow([name, newId]);
-        Logger.log("Assigned New Candidate ID: " + newId + " to " + name);
-    }
 }
 
 function shouldRunAutomatically() {
@@ -245,10 +207,8 @@ function generateReport() {
             reportContent += "\n-----------------------\n";
         }
     }
-    Logger.log(reportContent);
     return reportContent;
 }
-
 
 function openDownloadPage() {
   var url = "https://script.google.com/macros/s/AKfycbzNzh6ynIpylK4TO8jGiIXqAJDym-n4p_xrJA4HkPn4EDEtL-8AMXJiZWLbMavb8zaZ/exec"; 
@@ -256,3 +216,114 @@ function openDownloadPage() {
   return HtmlService.createHtmlOutput(html);
 }
 
+function openWebApp() {
+  var webAppUrl = "https://script.google.com/macros/s/AKfycbxTAA2QuOQCEpNa6l2N9ATP9cWWXPytBACMbyeY4-QKQD_UHRxT33OgIuwT4ied9uCkyg/exec";
+  var html = `<script>window.open('${webAppUrl}', '_blank');</script>`;
+  return HtmlService.createHtmlOutput(html);
+}
+
+function getHeadersForMapping(sheetLink) {
+  try {
+    var ss = SpreadsheetApp.openByUrl(sheetLink); 
+    var uploadedSheet = ss.getSheetByName("Uploaded Candidate Data");
+    var candidateSheet = ss.getSheetByName("Candidate");
+
+    if (!uploadedSheet || !candidateSheet) {
+      Logger.log("Error: One or both sheets are missing.");
+      return { error: "One or both sheets are missing." };
+    }
+
+    var uploadedHeaders = uploadedSheet.getRange(1, 1, 1, uploadedSheet.getLastColumn()).getValues()[0];
+    var candidateHeaders = candidateSheet.getRange(1, 1, 1, candidateSheet.getLastColumn()).getValues()[0];
+
+    Logger.log("Uploaded Headers: " + JSON.stringify(uploadedHeaders));
+    Logger.log("Candidate Sheet Headers: " + JSON.stringify(candidateHeaders));
+
+    return { uploadedHeaders: uploadedHeaders, candidateHeaders: candidateHeaders };
+  } catch (e) {
+    Logger.log("Error fetching headers: " + e.message);
+    return { error: "Error fetching headers: " + e.message };
+  }
+}
+
+function showHeaderMappingPopup() {
+  var htmlTemplate = HtmlService.createHtmlOutputFromFile('HeaderMappingUI')
+      .setTitle("Map Headers");
+  SpreadsheetApp.getUi().showSidebar(htmlTemplate);
+}
+
+function getHeaders() {
+  var sourceHeaders = getHeadersFromSheet("Uploaded Candidate Data");
+  var destinationHeaders = getHeadersFromSheet("Candidate");
+
+  return { source: sourceHeaders, destination: destinationHeaders };
+}
+
+function getHeadersFromSheet(sheetName) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  if (!sheet) return [];
+
+  var lastColumn = sheet.getLastColumn();
+  if (lastColumn === 0) return []; 
+  
+  return sheet.getRange(1, 1, 1, lastColumn).getValues()[0] || []; 
+}
+
+function applyHeaderMapping(mapping) {
+  var sourceSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Uploaded Candidate Data");
+  var destinationSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Candidate");
+
+  if (!sourceSheet || !destinationSheet) {
+    Logger.log("Error: One or both sheets are missing.");
+    return;
+  }
+
+  var sourceHeaders = sourceSheet.getRange(1, 1, 1, sourceSheet.getLastColumn()).getValues()[0];
+  var destinationHeaders = destinationSheet.getRange(1, 1, 1, destinationSheet.getLastColumn()).getValues()[0];
+
+  var sourceData = sourceSheet.getDataRange().getValues();
+  var destinationData = destinationSheet.getDataRange().getValues();
+
+  if (Object.keys(mapping).length === 0) {
+    Logger.log("Error: No headers mapped.");
+    return;
+  }
+
+  var newRows = [];
+  var mappingArray = Object.entries(mapping); 
+  var candidateIdColIndex = destinationHeaders.indexOf("Candidate ID");
+
+  var lastRow = destinationSheet.getLastRow();
+  var maxCandidateId = 0;
+  if (lastRow > 1) {  
+    var existingIds = destinationSheet.getRange(2, candidateIdColIndex + 1, lastRow - 1, 1).getValues().flat();
+    var numericIds = existingIds.map(id => parseInt(id)).filter(id => !isNaN(id));
+    if (numericIds.length > 0) {
+      maxCandidateId = Math.max(...numericIds);
+    }
+  }
+
+  for (let i = 1; i < sourceData.length; i++) {
+    let newRow = new Array(destinationHeaders.length).fill("");
+
+    if (candidateIdColIndex !== -1) {
+      maxCandidateId++;
+      newRow[candidateIdColIndex] = maxCandidateId;
+    }
+
+    mappingArray.forEach(([source, destination]) => {
+      let sourceIndex = sourceHeaders.indexOf(source);
+      let destinationIndex = destinationHeaders.indexOf(destination);
+      if (sourceIndex !== -1 && destinationIndex !== -1) {
+        newRow[destinationIndex] = sourceData[i][sourceIndex];
+      }
+    });
+    newRows.push(newRow);
+  }
+
+  if (newRows.length > 0) {
+    destinationSheet.getRange(destinationSheet.getLastRow() + 1, 1, newRows.length, newRows[0].length).setValues(newRows);
+  } else {
+    Logger.log("Warning: No data was transferred.");
+  }
+}
