@@ -4,10 +4,10 @@
 ## 🔹 Overview
 This project streamlines resume processing, candidate evaluation, and automated task assignment. It integrates Flask APIs, Google Sheets, and Cloud Functions to enhance hiring efficiency.
 
-✅ Resume Parsing: Extracts structured data (Name, Email, Skills, Experience) from resumes.
-✅ Task Mapping: Dynamically assigns tasks to employees based on skill matching.
-✅ Google Sheets Integration: Automates data storage using Google App Scripts.
-✅ Cloud Deployment: Hosted on Google Cloud Functions for real-time automation.
+- Resume Parsing: Extracts structured data (Name, Email, Skills, Experience) from resumes.
+- Task Mapping: Dynamically assigns tasks to employees based on skill matching.
+- Google Sheets Integration: Automates data storage using Google App Scripts.
+- Cloud Deployment: Hosted on Google Cloud Functions for real-time automation.
 
 ## 🔧 Tech Stack
 - Backend: Python, Flask
@@ -18,28 +18,21 @@ This project streamlines resume processing, candidate evaluation, and automated 
 
 ### 🚀 Features
 1️⃣ Resume Parsing
-🔹 Extracts key details from resumes using NLP techniques.
-🔹 Stores structured data in Google Sheets via API integration.
-🔹 Supports multiple file formats (PDF, DOCX).
+- Extracts key details from resumes using NLP techniques.
+- Stores structured data in Google Sheets via API integration.
+- Supports multiple file formats (PDF, DOCX).
 
 2️⃣ Task Mapping & Workflow Automation
-🔹 Dynamically maps tasks to employees based on their skills.
-🔹 Uses Levenshtein Distance Algorithm for skill similarity matching.
-🔹 Generates real-time reports for task tracking and efficiency.
+- Dynamically maps tasks to employees based on their skills.
+- Uses Levenshtein Distance Algorithm for skill similarity matching.
+- Generates real-time reports for task tracking and efficiency.
 
 3️⃣ Google Sheets & Email Automation
-🔹 Fetches candidate and employee details automatically.
-🔹 Sends automated email notifications for assigned tasks.
+- Fetches candidate and employee details automatically.
+- Sends automated email notifications for assigned tasks.
 
 ### 🛠️ Setup & Deployment
-1️⃣ Clone the Repository
-git clone https://github.com/yourusername/resume_parser-task_mapper.git
-cd resume_parser-task_mapper
-2️⃣ Install Dependencies
-pip install -r requirements.txt
-3️⃣ Configure Google Cloud & App Scripts
-Enable Google Cloud APIs (Cloud Functions, Sheets, Gmail API).
-Deploy Google App Scripts for automation.
-Run Flask backend for local processing.
-4️⃣ Run the Flask Backend
-python app.py
+- Clone the Repository: cd resume_parser-task_mapper
+- Install Dependencies: pip install -r requirements.txt
+- Configure Google Cloud & App Scripts: Enable Google Cloud APIs (Cloud Functions, Sheets, Gmail API). Deploy Google App Scripts for automation. Run Flask backend for local processing.
+- Run the Flask Backend: python app.py
