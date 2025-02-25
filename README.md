@@ -10,11 +10,11 @@ This project streamlines resume processing, candidate evaluation, and automated 
 ✅ Cloud Deployment: Hosted on Google Cloud Functions for real-time automation.
 
 ## 🔧 Tech Stack
-Backend: Python, Flask
-Cloud & Automation: Google Cloud Functions, Google App Scripts
-Database: Google Sheets (used as a structured database)
-APIs: Gmail API, Google Drive API
-Scripting: JavaScript (Google App Scripts), Python
+- Backend: Python, Flask
+- Cloud & Automation: Google Cloud Functions, Google App Scripts
+- Database: Google Sheets (used as a structured database)
+- APIs: Gmail API, Google Drive API
+- Scripting: JavaScript (Google App Scripts), Python
 
 ### 🚀 Features
 1️⃣ Resume Parsing
