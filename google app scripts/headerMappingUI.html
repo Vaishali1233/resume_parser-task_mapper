@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        function loadHeaders() {
+            google.script.run.withSuccessHandler(populateHeaders).getHeaders();
+        }
+
+        function populateHeaders(data) {
+            if (data.source.length === 0 || data.destination.length === 0) {
+                document.getElementById("mapping-container").innerHTML = `<p style="color: red;">Error: One or both sheets have no headers.</p>`;
+                return;
+            }
+
+            let container = document.getElementById("mapping-container");
+            container.innerHTML = "";
+
+            data.source.forEach((sourceHeader, index) => {
+                let row = document.createElement("div");
+                row.style.display = "flex";
+                row.style.marginBottom = "10px";
+
+                let sourceLabel = document.createElement("span");
+                sourceLabel.innerText = sourceHeader;
+                sourceLabel.style.width = "40%";
+
+                let dropdown = document.createElement("select");
+                dropdown.name = `mapping-${index}`;
+                dropdown.style.width = "50%";
+
+                let defaultOption = document.createElement("option");
+                defaultOption.value = "";
+                defaultOption.innerText = "Select Destination Header";
+                dropdown.appendChild(defaultOption);
+
+                data.destination.forEach(destHeader => {
+                    let option = document.createElement("option");
+                    option.value = destHeader;
+                    option.innerText = destHeader;
+                    dropdown.appendChild(option);
+                });
+
+                row.appendChild(sourceLabel);
+                row.appendChild(dropdown);
+                container.appendChild(row);
+            });
+        }
+
+        function submitMapping() {
+            let mappings = {};
+            document.querySelectorAll("select").forEach(select => {
+                let sourceHeader = select.previousSibling.innerText;
+                let destHeader = select.value;
+                if (destHeader) {
+                    mappings[sourceHeader] = destHeader;
+                }
+            });
+
+            google.script.run.withSuccessHandler(() => google.script.host.close()).applyHeaderMapping(mappings);
+        }
+    </script>
+</head>
+<body onload="loadHeaders()">
+    <h3>Map Headers</h3>
+    <div id="mapping-container"></div>
+    <button onclick="submitMapping()">Save Mapping</button>
+    
+    <a href="https://script.google.com/macros/s/AKfycbzNzh6ynIpylK4TO8jGiIXqAJDym-n4p_xrJA4HkPn4EDEtL-8AMXJiZWLbMavb8zaZ/exec" target="_blank">
+        <button>Download Candidate Report</button>
+    </a>
+</body>
+</html>
